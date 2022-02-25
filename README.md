@@ -15,7 +15,26 @@ Checkout the repository and run `pip install .`.
 4. Run `python3 -m openai_caching_proxy.server initdb`
 5. Run `python3 -m openai_caching_proxy.server server --host IP --port=PORT --openai-api-key=KEY`
 
-# Client
+### For supervisord
+
+```
+[program:openai_caching_proxy]
+user=arjun
+command=/home/arjun/bin/openai_caching_server.sh
+```
+
+```
+#!/bin/bash
+conda activate
+python3 -m openai_caching_proxy.server server \
+        --host IP \
+        --port PORT \
+        --openai-api-key=KEY
+```
+
+
+
+## Client
 
 ```
 >>> from openai_caching_proxy.client import completion, set_base_url
