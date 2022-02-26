@@ -1,13 +1,13 @@
 from flask import Flask, request
 import json
 import sqlalchemy
-from sqlalchemy import MetaData, Table, Column, Integer, String, ARRAY, Float
+from sqlalchemy import MetaData, Table, Column, Integer, String, ARRAY, Float, cast
 import argparse
 import openai
 from contextlib import closing
 from typing import List
 
-DB_STRING = 'postgres:///openai_cache?host=/var/run/postgresql'
+DB_STRING = 'postgresql:///openai_cache?host=/var/run/postgresql'
 
 class State:
 
@@ -52,7 +52,7 @@ class State:
             (self.results.c.max_tokens == max_tokens) &
             (self.results.c.temperature == temperature) &
             (self.results.c.top_p == top_p) &
-            (self.results.c.stop == stop) &
+            (self.results.c.stop == cast(stop, ARRAY(String))) &
             (self.results.c.presence_penalty == presence_penalty) &
             (self.results.c.frequency_penalty == frequency_penalty)
         )
