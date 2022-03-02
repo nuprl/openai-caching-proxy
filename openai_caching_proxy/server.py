@@ -6,6 +6,7 @@ import argparse
 import openai
 from contextlib import closing
 from typing import List
+import time
 
 DB_STRING = "postgresql:///openai_cache?host=/var/run/postgresql"
 
@@ -24,7 +25,7 @@ class State:
             Column("prompt", String, nullable=False),
             Column("max_tokens", Integer, nullable=False),
             Column("temperature", Float, nullable=False),
-            Column("top_p", Integer, nullable=False),
+            Column("top_p", Float, nullable=False),
             Column("stop", ARRAY(String), nullable=False),
             Column("presence_penalty", Float, nullable=False),
             Column("frequency_penalty", Float, nullable=False),
@@ -56,26 +57,45 @@ class State:
             & (self.results.c.stop == cast(stop, ARRAY(String)))
             & (self.results.c.presence_penalty == presence_penalty)
             & (self.results.c.frequency_penalty == frequency_penalty)
-        )
+        ).execute().fetchall()
+        
         existing = [
-            row["completion"] for row in self.conn.execute(select_existing).fetchall()
+            row["completion"] for row in select_existing
         ]
         if n <= len(existing):
             return existing[:n]
 
         n = n - len(existing)
 
-        response = openai.Completion.create(
-            engine=engine,
-            prompt=prompt,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            top_p=top_p,
-            stop=stop if len(stop) > 0 else None,
-            frequency_penalty=frequency_penalty,
-            presence_penalty=presence_penalty,
-            n=n,
-        )
+        print('Querying OpenAI API...')
+
+        # An easy hack to deal with the Codex rate limit. We sleep for
+        # 60 / 20 + epsilon seconds, where 20 is the maximum number of requests
+        # we can make in a minute.
+        if ('code' in engine) or ('codex' in engine):
+            time.sleep(60 / 20 + 1) # TODO(arjun): sleep on web server may be bad.
+
+        while True:
+            try:
+                response = openai.Completion.create(
+                    engine=engine,
+                    prompt=prompt,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    top_p=top_p,
+                    stop=stop if len(stop) > 0 else None,
+                    frequency_penalty=frequency_penalty,
+                    presence_penalty=presence_penalty,
+                    n=n,
+                )
+                break
+            except openai.error.TryAgain:
+                time.sleep(0.5)
+                continue
+            except openai.error.RateLimitError:
+                time.sleep(60 / 20 + 1)
+                continue
+
         new_completions = [choice.text for choice in response.choices]
         for completion in new_completions:
             self.results.insert().values(
