@@ -10,8 +10,27 @@ Checkout the repository and run `pip install .`.
 ## Server
 
 1. Install PostgreSQL.
-2. Create a database called `openai_cache`.
-3. Ensure the user that will run the server has access to the database.
+   
+   ```
+   sudo apt-get install postgresql-10  postgresql-server-dev-10
+   ```
+   
+2. Create a database called `openai_cache` and ensure that the user that will run the
+   server has access to the database.
+
+   ```
+   sudo -u postgres psql
+   CREATE DATABASE openai_cache;
+   CREATE USER <username>;
+   GRANT ALL PRIVILEGES ON DATABASE codex_evaluation TO <username>;
+   ```
+
+3. Install the package:
+
+   ```
+   pip3 install .
+   ```
+   
 4. Run `python3 -m openai_caching_proxy.server initdb`
 5. Run `python3 -m openai_caching_proxy.server server --host IP --port=PORT --openai-api-key=KEY`
 
