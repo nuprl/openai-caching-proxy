@@ -4,7 +4,7 @@ from setuptools import setup
 
 def _read(fn):
     path = os.path.join(os.path.dirname(__file__), fn)
-    return open(path).read()
+    return open(path, encoding='cp850').read()
 
 setup(
     name='openai-caching-proxy',
