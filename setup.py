@@ -20,7 +20,7 @@ setup(
     install_requires=[
         'openai', 'flask', 'sqlalchemy'
     ],
-    python_requires='>=3.9',
+    python_requires='>=3.8',
     classifiers=[
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
