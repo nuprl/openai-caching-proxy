@@ -3,12 +3,6 @@
 *WARNING*: Running this program on the open Internet violates the OpenAI
 terms of service.
 
-## Installation
-
-Checkout the repository and run `pip install .`.
-
-## Server
-
 1. Install PostgreSQL.
    
    ```
@@ -25,39 +19,13 @@ Checkout the repository and run `pip install .`.
    GRANT ALL PRIVILEGES ON DATABASE codex_evaluation TO <username>;
    ```
 
-3. Install the package:
+3. Build the package
 
    ```
-   pip3 install .
+   npm install
+   npm run-script build
    ```
-   
-4. Run `python3 -m openai_caching_proxy.server initdb`
-5. Run `python3 -m openai_caching_proxy.server server --host IP --port=PORT --openai-api-key=KEY`
 
-### For supervisord
+4. Ensure `OPENAI_API_KEY` is set in the environment.
 
-```
-[program:openai_caching_proxy]
-user=arjun
-command=/home/arjun/bin/openai_caching_server.sh
-```
-
-```
-#!/bin/bash
-conda activate
-python3 -m openai_caching_proxy.server server \
-        --host IP \
-        --port PORT \
-        --openai-api-key=KEY
-```
-
-
-
-## Client
-
-```
->>> from openai_caching_proxy.client import completion, set_base_url
->>> set_base_url('http://IP:PORT')
->>> completion(engine='curie', prompt='Hello, cats!', n=2)
-['”) and portability (the ability to descend into a cave should you', '\n\nBut don’t worry! I won’t take all']
-```
+5. Run `node ./target/index.js -p 7000`
