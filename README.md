@@ -1,5 +1,9 @@
 # OpenAI Caching Proxy
 
+This is an HTTP server that mimicks the OpenAI, proxies requests to OpenAI, and 
+caches results. It uses the cache when possible. The running server stores the 
+OpenAI API key, so clients do not need to store the key themselves.
+
 *WARNING*: Running this program on the open Internet violates the OpenAI
 terms of service.
 
@@ -45,4 +49,4 @@ terms of service.
 
 4. Ensure `OPENAI_API_KEY` is set in the environment.
 
-5. Run `node ./target/index.js -p 7000`
+5. Run `node ./target/index.js -p <port_number>`
