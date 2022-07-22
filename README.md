@@ -13,14 +13,14 @@ terms of service.
    sudo apt-get install postgresql-10  postgresql-server-dev-10
    ```
    
-2. Create a database called `openai_cache` and ensure that the user that will run the
-   server has access to the database.
+2. Create a database called `openai_cache` and ensure that the user that will
+   run the server has access to the database.
 
    ```
    sudo -u postgres psql
    CREATE DATABASE openai_cache;
    CREATE USER <username>;
-   GRANT ALL PRIVILEGES ON DATABASE codex_evaluation TO <username>;
+   ALTER DATABASE codex_evaluation OWNER TO <username>;
    ```
 
 2. Create a table called results that serves as the cache:

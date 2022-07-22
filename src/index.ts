@@ -6,31 +6,6 @@ import * as express from "express";
 import * as bodyParser from "body-parser";
 import * as morgan from "morgan";
 
-export async function initDB(client: pg.Client) {
-    try {
-        let results = await client.query(
-            `CREATE TABLE IF NOT EXISTS results (
-                id SERIAL PRIMARY KEY,
-                engine TEXT NOT NULL,
-                prompt TEXT NOT NULL,
-                max_tokens INTEGER NOT NULL,
-                temperature FLOAT NOT NULL,
-                top_p FLOAT NOT NULL,
-                stop TEXT[] NOT NULL,
-                presence_penalty FLOAT NOT NULL,
-                frequency_penalty FLOAT NOT NULL,
-                completion TEXT NOT NULL)`)
-        if (results.rowCount === 0) {
-            console.info(`results table already exists.`);
-        }
-        return true;
-    }
-    catch (exn) {
-        console.error(`Error creating results table: ${exn}`);
-        return false;
-    }
-}
-
 export async function completion(
     client: pg.Client,
     openaiClient: openai.OpenAIApi,
@@ -42,27 +17,31 @@ export async function completion(
     stop: string[] = [],
     presence_penalty: number = 0.0,
     frequency_penalty: number = 0.0,
-    n: number = 1): Promise<string[]> {
+    n: number = 1,
+    skipCache: boolean = false): Promise<string[]> {
 
-    // Find existing results with the same parameters.
-    const existingRows = await client.query(
-        `SELECT completion FROM results WHERE
-        engine = $1 AND
-        prompt = $2 AND
-        max_tokens = $3 AND
-        temperature = $4 AND
-        top_p = $5 AND
-        stop = $6 AND
-        presence_penalty = $7 AND
-        frequency_penalty = $8`,
-        [engine, prompt, max_tokens, temperature, top_p, stop, presence_penalty, frequency_penalty]);
-    
-    const existing = existingRows.rows.map(row => row.completion);
-    if (n <= existing.length) {
-        return existing.slice(0, n);
+    let existing = [ ];
+    if (skipCache === false) {
+        // Find existing results with the same parameters.
+        const existingRows = await client.query(
+            `SELECT completion FROM results WHERE
+            engine = $1 AND
+            prompt = $2 AND
+            max_tokens = $3 AND
+            temperature = $4 AND
+            top_p = $5 AND
+            stop = $6 AND
+            presence_penalty = $7 AND
+            frequency_penalty = $8`,
+            [engine, prompt, max_tokens, temperature, top_p, stop, presence_penalty, frequency_penalty]);
+
+        existing = existingRows.rows.map(row => row.completion);
+        if (n <= existing.length) {
+            return existing.slice(0, n);
+        }
+        n = n - existing.length;
     }
-    n = n - existing.length;
-    
+
     // An easy hack to deal with the Codex rate limit. We sleep for
     // 60 / 20 + epsilon seconds, where 20 is the maximum number of requests
     // we can make in a minute.
@@ -122,7 +101,8 @@ async function server(port: number, bindAddress: string) {
              req.body.stop,
              req.body.presence_penalty,
              req.body.frequency_penalty,
-             req.body.n);
+             req.body.n,
+             req.body.skipCache);
 
         res.json(results);
         
