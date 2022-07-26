@@ -46,16 +46,16 @@ export async function completion(
     // 60 / 20 + epsilon seconds, where 20 is the maximum number of requests
     // we can make in a minute.
     if (engine.includes("code") || engine.includes("codex")) {
-        await sleepInSeconds(60 / 20 + 1);
+        await sleepInSeconds(60 / 20 + 2);
     }
 
-    while (true) {
+    for (let i = 0; i < 5; i++) {
         const newCompletionsResult = 
-          (await fromPromise(openaiClient.createCompletion(engine, 
-                { prompt, temperature, max_tokens, top_p, stop, presence_penalty, frequency_penalty, n })))
+          (await fromPromise(openaiClient.createCompletion(
+                { model: engine, prompt, temperature, max_tokens, top_p, stop, presence_penalty, frequency_penalty, n })))
             .map(response => response.data.choices?.map(choice => choice.text ?? "").filter(choice => choice.length > 0) ?? []);
         if (newCompletionsResult.ok === false) {
-            console.error(`Error querying OpenAI API: ${newCompletionsResult}`);
+            console.error(`Error querying OpenAI API: ${JSON.stringify(newCompletionsResult)}`);
             await sleepInSeconds(1);
             continue;
         }
@@ -74,6 +74,9 @@ export async function completion(
         }
         return existing.concat(newCompletions);
     }
+
+    console.error(`Failed to query OpenAI API 5 times.`);
+    return [];
 }
 
 
