@@ -20,12 +20,15 @@ terms of service.
    sudo -u postgres psql
    CREATE DATABASE openai_cache;
    CREATE USER <username>;
-   ALTER DATABASE codex_evaluation OWNER TO <username>;
+   ALTER DATABASE openai_cache OWNER TO <username>;
    ```
+   
+   Exit `psql` and `exit` to leave sudo.
 
 2. Create a table called results that serves as the cache:
 
    ```
+   psql openai_cache;
    CREATE TABLE results (
      id SERIAL PRIMARY KEY,
      engine character varying NOT NULL,
@@ -39,6 +42,8 @@ terms of service.
      completion character varying NOT NULL
    );
    ```
+   
+   Exit `psql`.
 
 3. Build the package
 
@@ -50,3 +55,24 @@ terms of service.
 4. Ensure `OPENAI_API_KEY` is set in the environment.
 
 5. Run `node ./target/index.js -p <port_number>`
+
+## Using with supervisor
+
+Modify this shell script:
+
+```
+#!/bin/bash
+export OPENAI_API_KEY=<KEY>
+export USER=<USERNAME>
+export HOME=/home/<USERNAME>
+cd /home/<USERNAME>/openai-caching-proxy
+exec node ./target/index.js -p 9000
+```
+
+And save/modify this as `/etc/supervisor/conf.d/openai_caching_proxy.conf`:
+
+```
+[program:openai_caching_proxy]
+user=<USERNA>
+command=/home/<USERNAME>/bin/openai_caching_proxy.sh
+```
