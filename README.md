@@ -10,7 +10,7 @@ terms of service.
 1. Install PostgreSQL.
    
    ```
-   sudo apt-get install postgresql-10  postgresql-server-dev-10
+   sudo apt-get install postgresql
    ```
    
 2. Create a database called `openai_cache` and ensure that the user that will
@@ -73,6 +73,6 @@ And save/modify this as `/etc/supervisor/conf.d/openai_caching_proxy.conf`:
 
 ```
 [program:openai_caching_proxy]
-user=<USERNA>
+user=<USERNAME>
 command=/home/<USERNAME>/bin/openai_caching_proxy.sh
 ```
