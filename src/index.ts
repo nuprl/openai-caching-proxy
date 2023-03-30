@@ -1,5 +1,5 @@
 import * as pg from "pg";
-import * as openai from "openai";
+import * as openai from "azure-openai";
 import { sleepInSeconds, fromPromise } from "@arjunguha/pervasives.js";
 import { program } from "commander";
 import * as express from "express";
@@ -52,7 +52,7 @@ export async function completion(
     for (let i = 0; i < 5; i++) {
         const newCompletionsResult = 
           (await fromPromise(openaiClient.createCompletion(
-                { model: engine, prompt, temperature, max_tokens, top_p, stop, presence_penalty, frequency_penalty, n })))
+                { model: engine, prompt, temperature, max_tokens, top_p, stop, presence_penalty, frequency_penalty, n }, {})))
             .map(response => response.data.choices?.map(choice => choice.text ?? "").filter(choice => choice.length > 0) ?? []);
         if (newCompletionsResult.ok === false) {
             console.error(`Error querying OpenAI API: ${JSON.stringify(newCompletionsResult)}`);
@@ -85,6 +85,7 @@ async function server(port: number, bindAddress: string) {
     await db.connect();
     const conf = new openai.Configuration({ 
         apiKey: process.env.OPENAI_API_KEY,
+	azure: { apiKey: process.env.OPENAI_API_KEY, endpoint: "https://charlie-east.openai.azure.com", deploymentName: "code-davinci-002" }
     });
     const openAIClient = new openai.OpenAIApi(conf);    
 
